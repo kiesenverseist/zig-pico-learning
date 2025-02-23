@@ -1,0 +1,41 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1738142207,
+        "narHash": "sha256-NGqpVVxNAHwIicXpgaVqJEJWeyqzoQJ9oc8lnK9+WC4=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "9d3ae807ebd2981d593cddd0080856873139aa40",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "zigscient-src": "zigscient-src"
+      }
+    },
+    "zigscient-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1738374340,
+        "narHash": "sha256-FI/MRpznHQPsA3kMsjNokzbooAzkauMqtXH3qqk35l0=",
+        "type": "tarball",
+        "url": "https://github.com/nuIIpointerexception/zigscient-builds/releases/download/20250201/zigscient-x86_64-linux-gnu.zip"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://github.com/nuIIpointerexception/zigscient-builds/releases/download/20250201/zigscient-x86_64-linux-gnu.zip"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

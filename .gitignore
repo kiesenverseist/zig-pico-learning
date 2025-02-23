@@ -1,0 +1,10 @@
+# zig
+.zig-cache
+zig-out
+
+# cmake
+build
+
+# nix
+.direnv
+result
