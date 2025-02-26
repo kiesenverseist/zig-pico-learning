@@ -3,10 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
-    # zigscient-src = {
-    #   url = "https://github.com/nuIIpointerexception/zigscient-builds/releases/download/20250223/zigscient-x86_64-linux-gnu.zip";
-    #   flake = false;
-    # };
+    zig2nix.url = "github:Cloudef/zig2nix";
+    zigscient-src = {
+      url = "github:llogick/zigscient-next";
+      flake = false;
+    };
   };
 
   outputs = {...} @ inputs: let
@@ -23,7 +24,15 @@
         sha256 = "sha256-nLn6H/P79Jbk3/TIowH2WqmHFCXKEy7lgs7ZqhqJwDM=";
       };
     };
-
+    # zig-env = inputs.zig2nix.outputs.zig-env.${system} {zig = inputs.zig2nix.outputs.packages.${system}.zig.master.bin;};
+    # system-triple = zig-env.lib.zigTripleFromString system;
+    # zigscient-next = zig-env.packageForTarget system-triple {
+    #   src = zig-env.pkgs.lib.cleanSource (pkgs.lib.traceVal inputs.zigscient-src);
+    #
+    #   optimize = "ReleaseFast";
+    #   zigPreferMusl = true;
+    #   zigDisableWrap = true;
+    # };
     # zigscient = pkgs.stdenvNoLibs.mkDerivation {
     #   name = "zigscient";
     #   src = inputs.zigscient-src;
@@ -43,6 +52,9 @@
         pkgs.zig_0_13
         pkgs.zls
         # zigscient
+
+        # inputs.zig2nix.outputs.packages.${system}.zig.master.bin
+        # zigscient-next
 
         # utils
         pkgs.udisks

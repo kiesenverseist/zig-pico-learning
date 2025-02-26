@@ -1,5 +1,23 @@
 {
   "nodes": {
+    "flake-utils": {
+      "inputs": {
+        "systems": "systems"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1739866667,
@@ -16,9 +34,76 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1736817698,
+        "narHash": "sha256-1m+JP9RUsbeLVv/tF1DX3Ew9Vl/fatXnlh/g5k3jcSk=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "2b1fca3296ddd1602d2c4f104a4050e006f4b0cb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "zig2nix": "zig2nix",
+        "zigscient-src": "zigscient-src"
+      }
+    },
+    "systems": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "zig2nix": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "lastModified": 1740793510,
+        "narHash": "sha256-Jy/2/jTaoMXphijdV7v0zHc/ckBvz4ooYSKMdq54Sik=",
+        "owner": "Cloudef",
+        "repo": "zig2nix",
+        "rev": "6bd6fa7031ca0836490ccfcdc8414dd7fb12cfb5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Cloudef",
+        "repo": "zig2nix",
+        "type": "github"
+      }
+    },
+    "zigscient-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1740647199,
+        "narHash": "sha256-HQFU/uUhxTSs9bei1yidDMB8NPh5he7O0SpQymphLus=",
+        "owner": "llogick",
+        "repo": "zigscient-next",
+        "rev": "5be56b973a7c058a13ed32037e89283268f0d8ad",
+        "type": "github"
+      },
+      "original": {
+        "owner": "llogick",
+        "repo": "zigscient-next",
+        "type": "github"
       }
     }
   },
