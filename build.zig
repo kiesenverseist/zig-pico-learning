@@ -17,7 +17,7 @@ const PicoSDKPath: ?[]const u8 = null;
 // arm-none-eabi toolchain path may be specified here as well
 const ARMNoneEabiPath: ?[]const u8 = null;
 
-pub fn build(b: *std.Build) anyerror!void {
+pub fn build(b: *std.Build) anyerror!void { // $ls root_id 0
 
     // ------------------
     const target = std.Target.Query{
@@ -40,9 +40,9 @@ pub fn build(b: *std.Build) anyerror!void {
     // if the sdk path contains the pico_sdk_init.cmake file then we know its correct
     const pico_sdk_path =
         if (PicoSDKPath) |sdk_path| sdk_path else std.process.getEnvVarOwned(b.allocator, "PICO_SDK_PATH") catch null orelse {
-        std.log.err("The Pico SDK path must be set either through the PICO_SDK_PATH environment variable or at the top of build.zig.", .{});
-        return;
-    };
+            std.log.err("The Pico SDK path must be set either through the PICO_SDK_PATH environment variable or at the top of build.zig.", .{});
+            return;
+        };
 
     const pico_init_cmake_path = b.pathJoin(&.{ pico_sdk_path, "pico_sdk_init.cmake" });
     std.fs.cwd().access(pico_init_cmake_path, .{}) catch {
@@ -193,6 +193,17 @@ pub fn build(b: *std.Build) anyerror!void {
     const upload_argv = [_][]const u8{ "openocd", "-f", "interface/cmsis-dap.cfg", "-f", "target/rp2350.cfg", "-c", "\"adapter speed 5000\"", "-c", "\"program ./zig-out/firmware.elf verify reset exit\"" };
     const upload_step = b.addSystemCommand(&upload_argv);
     upload_step.step.dependOn(&elf_create_step.step);
+
+    const docs_step = b.step("doc", "Emit documentation");
+
+    const docs_install = b.addInstallDirectory(.{
+        .install_dir = .prefix,
+        .install_subdir = "docs",
+        .source_dir = lib.getEmittedDocs(),
+    });
+
+    docs_step.dependOn(&docs_install.step);
+    bin_step.dependOn(docs_step);
 
     b.default_step = bin_step;
 }
