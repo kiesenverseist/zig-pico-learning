@@ -3,10 +3,10 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
-    zigscient-src = {
-      url = "https://github.com/nuIIpointerexception/zigscient-builds/releases/download/20250201/zigscient-x86_64-linux-gnu.zip";
-      flake = false;
-    };
+    # zigscient-src = {
+    #   url = "https://github.com/nuIIpointerexception/zigscient-builds/releases/download/20250223/zigscient-x86_64-linux-gnu.zip";
+    #   flake = false;
+    # };
   };
 
   outputs = {...} @ inputs: let
@@ -24,25 +24,25 @@
       };
     };
 
-    zigscient = pkgs.stdenvNoLibs.mkDerivation {
-      name = "zigscient";
-      src = inputs.zigscient-src;
-      dontUnpack = true;
-      # nativeBuildInputs = [pkgs.unzip];
-      # unpackCmd="unzip $curSrc";
-      installPhase = ''
-        ls $src
-        mkdir -p $out/bin
-        cp $src $out/bin/zls
-        chmod +x $out/bin/zls
-      '';
-    };
+    # zigscient = pkgs.stdenvNoLibs.mkDerivation {
+    #   name = "zigscient";
+    #   src = inputs.zigscient-src;
+    #   dontUnpack = true;
+    #   # nativeBuildInputs = [pkgs.unzip];
+    #   # unpackCmd="unzip $curSrc";
+    #   installPhase = ''
+    #     ls $src
+    #     mkdir -p $out/bin
+    #     cp $src $out/bin/zls
+    #     chmod +x $out/bin/zls
+    #   '';
+    # };
   in {
     devShells.${system}.default = pkgs.mkShell {
       packages = [
         pkgs.zig_0_13
-        # pkgs.zls
-        zigscient
+        pkgs.zls
+        # zigscient
 
         # utils
         pkgs.udisks

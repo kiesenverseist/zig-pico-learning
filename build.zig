@@ -182,9 +182,19 @@ pub fn build(b: *std.Build) anyerror!void {
     const uf2_create_step = b.addInstallFile(b.path("build/mlem.uf2"), "firmware.uf2");
     uf2_create_step.step.dependOn(&make_step.step);
 
-    const uf2_step = b.step("uf2", "Create firmware.uf2");
-    uf2_step.dependOn(&uf2_create_step.step);
-    b.default_step = uf2_step;
+    const elf_create_step = b.addInstallFile(b.path("build/mlem.elf"), "firmware.elf");
+    elf_create_step.step.dependOn(&make_step.step);
+
+    const bin_step = b.step("bin", "Create firmware.elf and firmware.uf2");
+    bin_step.dependOn(&uf2_create_step.step);
+    bin_step.dependOn(&elf_create_step.step);
+
+    // const upload_step = b.step("upload", "Upload elf to the pico using the debugger");
+    const upload_argv = [_][]const u8{ "openocd", "-f", "interface/cmsis-dap.cfg", "-f", "target/rp2350.cfg", "-c", "\"adapter speed 5000\"", "-c", "\"program ./zig-out/firmware.elf verify reset exit\"" };
+    const upload_step = b.addSystemCommand(&upload_argv);
+    upload_step.step.dependOn(&elf_create_step.step);
+
+    b.default_step = bin_step;
 }
 
 // ------------------ Board support

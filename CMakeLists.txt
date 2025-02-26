@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.27)
 # Initialize the Pico SDK
 include(${PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 project(mlem)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 pico_sdk_init()
 add_executable(mlem)
 
@@ -17,7 +20,7 @@ if (STDIO_UART)
 endif()
 
 # Adjust libraries as needed
-target_link_libraries(mlem pico_stdlib pico_cyw43_arch_none ${CMAKE_SOURCE_DIR}/zig-out/mlem.o)
+target_link_libraries(mlem pico_stdlib pico_cyw43_arch_none hardware_pwm ${CMAKE_SOURCE_DIR}/zig-out/mlem.o)
 
 # Generate binary
 pico_add_extra_outputs(mlem)
