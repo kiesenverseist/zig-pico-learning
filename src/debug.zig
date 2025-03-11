@@ -11,7 +11,7 @@ pub fn assert(ok: bool, comptime fmt: []const u8, args: anytype, src: std.builti
 
 /// Prints a message along with the location of the provided src. Then panics.
 pub fn dump(comptime fmt: []const u8, args: anytype, src: std.builtin.SourceLocation) noreturn {
-    @setCold(true);
+    @branchHint(.cold);
 
     var buffer: [1024]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(&buffer);

@@ -3,11 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
-    zig2nix.url = "github:Cloudef/zig2nix";
-    zigscient-src = {
-      url = "github:llogick/zigscient-next";
-      flake = false;
-    };
+    # zig2nix.url = "github:Cloudef/zig2nix";
+    # zigscient-src = {
+    #   url = "github:llogick/zigscient-next";
+    #   flake = false;
+    # };
   };
 
   outputs = {...} @ inputs: let
@@ -49,7 +49,7 @@
   in {
     devShells.${system}.default = pkgs.mkShell {
       packages = [
-        pkgs.zig_0_13
+        pkgs.zig
         pkgs.zls
         # zigscient
 

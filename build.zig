@@ -36,22 +36,59 @@ pub fn build(b: *std.Build) anyerror!void { // $ls root_id 0
         .optimize = optimize,
     });
 
+    const make_step = try build_pico(b, lib);
+
+    const uf2_create_step = b.addInstallFile(b.path("build/mlem.uf2"), "firmware.uf2");
+    uf2_create_step.step.dependOn(&make_step.step);
+
+    const elf_create_step = b.addInstallFile(b.path("build/mlem.elf"), "firmware.elf");
+    elf_create_step.step.dependOn(&make_step.step);
+
+    const bin_step = b.step("bin", "Create firmware.elf and firmware.uf2");
+    bin_step.dependOn(&uf2_create_step.step);
+    bin_step.dependOn(&elf_create_step.step);
+
+    // const upload_step = b.step("upload", "Upload elf to the pico using the debugger");
+    const upload_argv = [_][]const u8{ "openocd", "-f", "interface/cmsis-dap.cfg", "-f", "target/rp2350.cfg", "-c", "\"adapter speed 5000\"", "-c", "\"program ./zig-out/firmware.elf verify reset exit\"" };
+    const upload_step = b.addSystemCommand(&upload_argv);
+    upload_step.step.dependOn(&elf_create_step.step);
+
+    const docs_step = b.step("doc", "Emit documentation");
+
+    const docs_install = b.addInstallDirectory(.{
+        .install_dir = .prefix,
+        .install_subdir = "docs",
+        .source_dir = lib.getEmittedDocs(),
+    });
+
+    docs_step.dependOn(&docs_install.step);
+    bin_step.dependOn(docs_step);
+
+    b.default_step = bin_step;
+}
+
+/// Do the stuff to build and link the pico sdk
+/// This function contains two steps:
+/// 1. run the cmake configuration
+pub fn build_pico(b: *std.Build, lib: *std.Build.Step.Compile) anyerror!*std.Build.Step.Run {
     // get and perform basic verification on the pico sdk path
     // if the sdk path contains the pico_sdk_init.cmake file then we know its correct
-    const pico_sdk_path =
-        if (PicoSDKPath) |sdk_path| sdk_path else std.process.getEnvVarOwned(b.allocator, "PICO_SDK_PATH") catch null orelse {
+    const pico_sdk_path = if (PicoSDKPath) |sdk_path|
+        sdk_path
+    else
+        std.process.getEnvVarOwned(b.allocator, "PICO_SDK_PATH") catch |err| {
             std.log.err("The Pico SDK path must be set either through the PICO_SDK_PATH environment variable or at the top of build.zig.", .{});
-            return;
+            return err;
         };
 
     const pico_init_cmake_path = b.pathJoin(&.{ pico_sdk_path, "pico_sdk_init.cmake" });
-    std.fs.cwd().access(pico_init_cmake_path, .{}) catch {
+    std.fs.cwd().access(pico_init_cmake_path, .{}) catch |err| {
         std.log.err(
             \\Provided Pico SDK path does not contain the file pico_sdk_init.cmake
             \\Tried: {s}
             \\Are you sure you entered the path correctly?"
         , .{pico_init_cmake_path});
-        return;
+        return err;
     };
 
     // default arm-none-eabi includes
@@ -74,13 +111,12 @@ pub fn build(b: *std.Build) anyerror!void { // $ls root_id 0
 
         break :blk error.StandardHeaderLocationNotSpecified;
     } catch |err| {
-        err catch {};
         std.log.err(
             \\Could not determine ARM Toolchain include directory.
             \\Please set the ARM_NONE_EABI_PATH environment variable with the correct path
             \\or set the ARMNoneEabiPath variable at the top of build.zig
         , .{});
-        return;
+        return err;
     };
     lib.addSystemIncludePath(.{ .cwd_relative = arm_header_location });
 
@@ -93,9 +129,9 @@ pub fn build(b: *std.Build) anyerror!void { // $ls root_id 0
         const header_file = @tagName(Board) ++ ".h";
         const _board_header = b.pathJoin(&.{ pico_sdk_path, "src/boards/include/boards", header_file });
 
-        std.fs.cwd().access(_board_header, .{}) catch {
+        std.fs.cwd().access(_board_header, .{}) catch |err| {
             std.log.err("Could not find the header file for board '{s}'\n", .{@tagName(Board)});
-            return;
+            return err;
         };
 
         break :blk header_file;
@@ -169,43 +205,19 @@ pub fn build(b: *std.Build) anyerror!void { // $ls root_id 0
         if (err != error.PathAlreadyExists) return err;
     }
 
+    // run cmake configuration
     const uart_or_usb = if (StdioUsb) "-DSTDIO_USB=1" else "-DSTDIO_UART=1";
     const cmake_pico_sdk_path = b.fmt("-DPICO_SDK_PATH={s}", .{pico_sdk_path});
     const cmake_argv = [_][]const u8{ "cmake", "-B", "./build", "-S .", "-DPICO_BOARD=" ++ @tagName(Board), "-DPICO_PLATFORM=" ++ @tagName(Platform), cmake_pico_sdk_path, uart_or_usb };
     const cmake_step = b.addSystemCommand(&cmake_argv);
     cmake_step.step.dependOn(&install_step.step);
 
+    // build the actual project
     const make_argv = [_][]const u8{ "cmake", "--build", "./build", "--parallel" };
     const make_step = b.addSystemCommand(&make_argv);
     make_step.step.dependOn(&cmake_step.step);
 
-    const uf2_create_step = b.addInstallFile(b.path("build/mlem.uf2"), "firmware.uf2");
-    uf2_create_step.step.dependOn(&make_step.step);
-
-    const elf_create_step = b.addInstallFile(b.path("build/mlem.elf"), "firmware.elf");
-    elf_create_step.step.dependOn(&make_step.step);
-
-    const bin_step = b.step("bin", "Create firmware.elf and firmware.uf2");
-    bin_step.dependOn(&uf2_create_step.step);
-    bin_step.dependOn(&elf_create_step.step);
-
-    // const upload_step = b.step("upload", "Upload elf to the pico using the debugger");
-    const upload_argv = [_][]const u8{ "openocd", "-f", "interface/cmsis-dap.cfg", "-f", "target/rp2350.cfg", "-c", "\"adapter speed 5000\"", "-c", "\"program ./zig-out/firmware.elf verify reset exit\"" };
-    const upload_step = b.addSystemCommand(&upload_argv);
-    upload_step.step.dependOn(&elf_create_step.step);
-
-    const docs_step = b.step("doc", "Emit documentation");
-
-    const docs_install = b.addInstallDirectory(.{
-        .install_dir = .prefix,
-        .install_subdir = "docs",
-        .source_dir = lib.getEmittedDocs(),
-    });
-
-    docs_step.dependOn(&docs_install.step);
-    bin_step.dependOn(docs_step);
-
-    b.default_step = bin_step;
+    return make_step;
 }
 
 // ------------------ Board support

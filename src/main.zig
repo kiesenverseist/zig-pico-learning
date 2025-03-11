@@ -28,7 +28,7 @@ export fn main() c_int {
 }
 
 pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
-    @setCold(true);
+    @branchHint(.cold);
 
     _ = p.printf("\n!! PANIC !!\n");
     _ = p.printf(msg.ptr);
