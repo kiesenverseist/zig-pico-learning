@@ -19,7 +19,6 @@ const ARMNoneEabiPath: ?[]const u8 = null;
 
 pub fn build(b: *std.Build) anyerror!void { // $ls root_id 0
 
-    // ------------------
     const target = std.Target.Query{
         .abi = .eabi,
         .cpu_arch = .thumb,
@@ -30,19 +29,21 @@ pub fn build(b: *std.Build) anyerror!void { // $ls root_id 0
     const optimize = b.standardOptimizeOption(.{});
 
     const lib = b.addObject(.{
-        .name = "zig-pico",
-        .root_source_file = b.path("src/main.zig"),
-        .target = b.resolveTargetQuery(target),
-        .optimize = optimize,
+        .name = "main",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = b.resolveTargetQuery(target),
+            .optimize = optimize,
+        }),
     });
 
     const make_step = try build_pico(b, lib);
 
     const uf2_create_step = b.addInstallFile(b.path("build/mlem.uf2"), "firmware.uf2");
-    uf2_create_step.step.dependOn(&make_step.step);
+    uf2_create_step.step.dependOn(make_step);
 
     const elf_create_step = b.addInstallFile(b.path("build/mlem.elf"), "firmware.elf");
-    elf_create_step.step.dependOn(&make_step.step);
+    elf_create_step.step.dependOn(make_step);
 
     const bin_step = b.step("bin", "Create firmware.elf and firmware.uf2");
     bin_step.dependOn(&uf2_create_step.step);
@@ -53,24 +54,24 @@ pub fn build(b: *std.Build) anyerror!void { // $ls root_id 0
     const upload_step = b.addSystemCommand(&upload_argv);
     upload_step.step.dependOn(&elf_create_step.step);
 
-    const docs_step = b.step("doc", "Emit documentation");
-
     const docs_install = b.addInstallDirectory(.{
-        .install_dir = .prefix,
-        .install_subdir = "docs",
         .source_dir = lib.getEmittedDocs(),
+        .install_dir = .prefix,
+        .install_subdir = "doc",
     });
+    docs_install.step.dependOn(&lib.step);
 
+    const docs_step = b.step("doc", "Build docs into zig-out/doc");
     docs_step.dependOn(&docs_install.step);
-    bin_step.dependOn(docs_step);
 
-    b.default_step = bin_step;
+    b.getInstallStep().dependOn(&docs_install.step);
+    b.getInstallStep().dependOn(bin_step);
 }
 
 /// Do the stuff to build and link the pico sdk
 /// This function contains two steps:
 /// 1. run the cmake configuration
-pub fn build_pico(b: *std.Build, lib: *std.Build.Step.Compile) anyerror!*std.Build.Step.Run {
+pub fn build_pico(b: *std.Build, lib: *std.Build.Step.Compile) anyerror!*std.Build.Step {
     // get and perform basic verification on the pico sdk path
     // if the sdk path contains the pico_sdk_init.cmake file then we know its correct
     const pico_sdk_path = if (PicoSDKPath) |sdk_path|
@@ -209,15 +210,17 @@ pub fn build_pico(b: *std.Build, lib: *std.Build.Step.Compile) anyerror!*std.Bui
     const uart_or_usb = if (StdioUsb) "-DSTDIO_USB=1" else "-DSTDIO_UART=1";
     const cmake_pico_sdk_path = b.fmt("-DPICO_SDK_PATH={s}", .{pico_sdk_path});
     const cmake_argv = [_][]const u8{ "cmake", "-B", "./build", "-S .", "-DPICO_BOARD=" ++ @tagName(Board), "-DPICO_PLATFORM=" ++ @tagName(Platform), cmake_pico_sdk_path, uart_or_usb };
-    const cmake_step = b.addSystemCommand(&cmake_argv);
-    cmake_step.step.dependOn(&install_step.step);
+    const configure_step = b.addSystemCommand(&cmake_argv);
+    configure_step.step.dependOn(&install_step.step);
+    // configure_step.expectExitCode(0);
 
     // build the actual project
     const make_argv = [_][]const u8{ "cmake", "--build", "./build", "--parallel" };
     const make_step = b.addSystemCommand(&make_argv);
-    make_step.step.dependOn(&cmake_step.step);
+    make_step.step.dependOn(&configure_step.step);
+    make_step.expectExitCode(0);
 
-    return make_step;
+    return &make_step.step;
 }
 
 // ------------------ Board support

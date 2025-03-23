@@ -1,9 +1,11 @@
-//? SSD1306 i2c driver
-//? based on raspberry pi's example: https://github.com/raspberrypi/pico-examples/blob/master/i2c/ssd1306_i2c/ssd1306_i2c.c
+//! SSD1306 i2c driver
+//! based on raspberry pi's example: https://github.com/raspberrypi/pico-examples/blob/master/i2c/ssd1306_i2c/ssd1306_i2c.c
 
 const std = @import("std");
-const assert = @import("debug.zig").assert;
-const p = @import("pico.zig").p;
+const assert = @import("../main.zig").assert;
+const p = @import("../pico.zig").p;
+
+const SSD1306 = @This();
 
 const height = 32;
 const width = 128;
@@ -11,6 +13,7 @@ const width = 128;
 const i2c_addr: u16 = 0x3c;
 const i2c_clk: u16 = 400;
 
+/// commands that can be sent to the device over i2c
 const commands = enum(u16) {
     set_mem_mode = 0x20,
     set_col_addr = 0x21,
@@ -46,3 +49,10 @@ const commands = enum(u16) {
 const page_height: u8 = 8;
 const num_pages = height / page_height;
 const buf_len = num_pages * width;
+
+buffer: []u8,
+
+/// Initialise an ssd oled display device
+pub fn init() void {
+    _ = p.printf("init display");
+}

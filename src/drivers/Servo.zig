@@ -1,5 +1,7 @@
-const assert = @import("debug.zig").assert;
-const p = @import("pico.zig").p;
+//! A module to control a servo motor using PWM
+
+const assert = @import("../debug.zig").assert;
+const p = @import("../pico.zig").p;
 
 const Servo = @This();
 

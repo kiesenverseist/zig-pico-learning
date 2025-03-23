@@ -1,5 +1,4 @@
 const std = @import("std");
-const p = @import("pico.zig").p;
 
 /// Assert a condition using the custom dump function. Since this is an
 /// embedded environment, we don't get proper stack traces. Therefore a message
@@ -17,13 +16,11 @@ pub fn dump(comptime fmt: []const u8, args: anytype, src: std.builtin.SourceLoca
     var fba = std.heap.FixedBufferAllocator.init(&buffer);
     const allocator = fba.allocator();
 
-    const msg_str = std.fmt.allocPrint(allocator, fmt, args) catch @panic("OOM during dump");
-    const str = std.fmt.allocPrintZ(allocator, "{s}\nFile: {s}\nFunction: {s}\nLine: {d}\n", .{
-        msg_str,
-        src.file,
-        src.fn_name,
-        src.line,
-    }) catch @panic("OOM during dump");
+    const str = std.fmt.allocPrint(
+        allocator,
+        fmt ++ "\nFile: {s}\nFunction: {s}\nLine: {d}\n",
+        args ++ .{ src.file, src.fn_name, src.line },
+    ) catch @panic("OOM during dump, msg length > 1024");
 
     @panic(str);
 }
